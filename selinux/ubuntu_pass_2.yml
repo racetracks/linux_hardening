@@ -1,6 +1,6 @@
 ---
 - name: Configure SELinux on Debian-based system (Post-Reboot)
-  hosts: all
+  hosts: localhost
   become: true
   tasks:
 
