@@ -19,8 +19,3 @@
       command: selinux-activate
       register: selinux_activate_result
       ignore_errors: yes
-
-    - name: Reboot the system if SELinux activation requires it
-      reboot:
-        msg: "Rebooting system to apply SELinux activation"
-      when: selinux_activate_result is changed
