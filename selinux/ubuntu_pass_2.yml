@@ -1,1 +1,29 @@
+---
+- name: Configure SELinux on Debian-based system (Post-Reboot)
+  hosts: all
+  become: true
+  tasks:
 
+    - name: Configure SELinux to use MLS policy
+      lineinfile:
+        path: /etc/selinux/config
+        regexp: '^SELINUXTYPE='
+        line: 'SELINUXTYPE=mls'
+        backup: yes
+
+    - name: Set SELinux to enforcing mode
+      lineinfile:
+        path: /etc/selinux/config
+        regexp: '^SELINUX='
+        line: 'SELINUX=enforcing'
+        backup: yes
+
+    - name: Update GRUB to enable SELinux
+      lineinfile:
+        path: /etc/default/grub
+        regexp: '^GRUB_CMDLINE_LINUX='
+        line: 'GRUB_CMDLINE_LINUX="selinux=1 security=selinux"'
+        backup: yes
+
+    - name: Update GRUB configuration
+      command: update-grub
