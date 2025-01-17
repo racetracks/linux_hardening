@@ -8,7 +8,7 @@
       lineinfile:
         path: /etc/selinux/config
         regexp: '^SELINUXTYPE='
-        line: 'SELINUXTYPE=mls'
+        line: 'SELINUXTYPE=default'
         backup: yes
 
     - name: Set SELinux to enforcing mode
