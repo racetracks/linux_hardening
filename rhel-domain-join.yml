@@ -2,6 +2,8 @@
 - name: Join RHEL to Active Directory
   hosts: localhost
   become: yes
+  vars:
+    domain: example.com
   tasks:
     - name: Install required packages
       dnf:
@@ -15,3 +17,37 @@
           - samba-common-tools
           - krb5-workstation
         state: present
+      register: package_installation
+
+    - name: Display package installation result
+      debug:
+        var: package_installation
+
+    - name: Configure SSSD
+      copy:
+        content: |
+          [sssd]
+          services = nss, pam, ssh, sudo
+          config_file_version = 2
+          domains = {{ domain }}
+          
+          [domain/{{ domain }}]
+          id_provider = ad
+          access_provider = ad
+          override_homedir = /home/%u
+          default_shell = /bin/bash
+          use_fully_qualified_names = False
+          cache_credentials = True
+          ldap_id_mapping = True
+          ldap_sudo = True
+        dest: /etc/sssd/sssd.conf
+        owner: root
+        group: root
+        mode: '0600'
+      notify: Restart sssd
+
+  handlers:
+    - name: Restart sssd
+      service:
+        name: sssd
+        state: restarted
