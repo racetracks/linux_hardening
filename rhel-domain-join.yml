@@ -1,0 +1,17 @@
+---
+- name: Join RHEL to Active Directory
+  hosts: localhost
+  become: yes
+  tasks:
+    - name: Install required packages
+      dnf:
+        name:
+          - realmd
+          - sssd
+          - oddjob
+          - oddjob-mkhomedir
+          - adcli
+          - samba-common
+          - samba-common-tools
+          - krb5-workstation
+        state: present
