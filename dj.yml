@@ -1,0 +1,57 @@
+---
+- name: Configure SSH and Login Access for AD Group
+  hosts: localhost
+  become: yes
+  vars:
+    ad_group: "IT-Admins"  # Change this to your AD group name
+    domain: "example.com"  # Your AD domain (used for fully qualified names if needed)
+
+  tasks:
+    - name: Allow SSH access for AD group
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        line: "AllowGroups {{ ad_group }}"
+        create: yes
+        state: present
+      notify: Restart SSH
+
+    - name: Allow local login for AD group in access.conf
+      blockinfile:
+        path: /etc/security/access.conf
+        block: |
+          + : @{{ ad_group }} : ALL
+          - : ALL : ALL
+        marker: "# {mark} ANSIBLE MANAGED BLOCK"
+
+    - name: Ensure pam_access.so is used in PAM for SSHD
+      lineinfile:
+        path: /etc/pam.d/sshd
+        line: "auth required pam_access.so"
+        state: present
+
+    - name: Ensure pam_access.so is used in PAM for login
+      lineinfile:
+        path: /etc/pam.d/login
+        line: "auth required pam_access.so"
+        state: present
+
+    - name: Configure SSSD for access control
+      blockinfile:
+        path: /etc/sssd/sssd.conf
+        block: |
+          [domain/{{ domain }}]
+          access_provider = simple
+          simple_allow_groups = {{ ad_group }}
+        marker: "# {mark} ANSIBLE MANAGED BLOCK"
+      notify: Restart SSSD
+
+  handlers:
+    - name: Restart SSH
+      service:
+        name: sshd
+        state: restarted
+
+    - name: Restart SSSD
+      service:
+        name: sssd
+        state: restarted
